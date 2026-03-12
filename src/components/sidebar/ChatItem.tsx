@@ -29,46 +29,60 @@ export const ChatItem: React.FC<ChatItemProps> = ({
     return (
         <div
             onClick={onClick}
-    className={`group relative p-3 rounded-lg cursor-pointer transition-colors ${
-        isActive
-            ? 'bg-blue-100 dark:bg-blue-900/30'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-    }`}
->
-    <div className="flex items-start justify-between gap-2">
-    <div className="flex-1 min-w-0">
-    <h3 className="font-medium text-sm truncate dark:text-white">
-        {chat.title}
-        </h3>
-        <p className="text-xs text-gray-500 dark:text-gray-400 truncate mt-1">
-        {chat.lastMessage}
-        </p>
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-        {formatDate(chat.lastMessageTime)}
-    </p>
-    </div>
+            className={`group relative p-4 mb-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                isActive
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300'
+            }`}
+        >
+            <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold text-sm truncate ${
+                        isActive ? 'text-white' : 'dark:text-white'
+                    }`}>
+                        {chat.title}
+                    </h3>
+                    <p className={`text-xs truncate mt-1 ${
+                        isActive ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                        {chat.lastMessage}
+                    </p>
+                    <p className={`text-xs mt-2 ${
+                        isActive ? 'text-blue-100' : 'text-gray-400 dark:text-gray-500'
+                    }`}>
+                        {formatDate(chat.lastMessageTime)}
+                    </p>
+                </div>
 
-    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-    <button
-        onClick={(e) => {
-        e.stopPropagation();
-        onEdit?.();
-    }}
-    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-    >
-    <Edit2 size={14} className="text-gray-500" />
-        </button>
-        <button
-    onClick={(e) => {
-        e.stopPropagation();
-        onDelete?.();
-    }}
-    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-    >
-    <Trash2 size={14} className="text-red-500" />
-        </button>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit?.();
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                            isActive
+                                ? 'hover:bg-blue-700'
+                                : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                    >
+                        <Edit2 size={14} className={isActive ? 'text-white' : 'text-gray-500'} />
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.();
+                        }}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                            isActive
+                                ? 'hover:bg-blue-700'
+                                : 'hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                    >
+                        <Trash2 size={14} className={isActive ? 'text-white' : 'text-red-500'} />
+                    </button>
+                </div>
+            </div>
         </div>
-        </div>
-        </div>
-);
+    );
 };

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Copy, Check, Bot } from 'lucide-react';
-import type {Message as MessageType} from '../../types';
+import { Copy, Check, Bot, User } from 'lucide-react';
+import type { Message as MessageType } from '../../types';
 
 interface MessageProps {
     message: MessageType;
@@ -18,62 +18,54 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const formatTime = (date: Date) => {
-        return new Intl.DateTimeFormat('ru-RU', {
-            hour: '2-digit',
-            minute: '2-digit',
-        }).format(date);
-    };
-
     return (
-        <div className={`flex gap-4 mb-6 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex gap-4 px-6 py-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
             {/* Avatar */}
-            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+            <div className={`flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center shadow-md ${
                 isUser
-                    ? 'bg-blue-600'
+                    ? 'bg-[var(--color-accent)]'
                     : 'bg-gradient-to-br from-purple-500 to-pink-500'
             }`}>
                 {isUser ? (
-                    <span className="text-white text-sm font-medium">Вы</span>
+                    <User size={18} className="text-white" />
                 ) : (
-                    <Bot size={16} className="text-white" />
+                    <Bot size={18} className="text-white" />
                 )}
             </div>
 
             {/* Message Content */}
             <div className={`flex-1 max-w-3xl ${isUser ? 'text-right' : 'text-left'}`}>
-                <div className="flex items-center gap-2 mb-1">
-          <span className="text-sm font-medium dark:text-white">
-            {isUser ? 'Вы' : 'GigaChat'}
-          </span>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-            {formatTime(message.timestamp)}
-          </span>
-                </div>
+                {/* Имя отправителя */}
+                <span className="text-sm font-medium text-[var(--color-text-secondary)] mb-1.5 block">
+                    {isUser ? 'Вы' : 'GigaChat'}
+                </span>
 
-                <div className="relative group">
-                    <div className={`inline-block text-left p-4 rounded-2xl ${
+                {/* Сообщение с кнопкой копирования */}
+                <div className="relative group inline-block max-w-full">
+                    <div className={`inline-block text-left px-5 py-3.5 rounded-2xl shadow-sm ${
                         isUser
-                            ? 'bg-blue-600 text-white rounded-tr-sm'
-                            : 'bg-gray-100 dark:bg-gray-800 dark:text-white rounded-tl-sm'
+                            ? 'bg-[var(--color-message-user)] text-[var(--color-message-user-text)] rounded-tr-sm'
+                            : 'bg-[var(--color-message-assistant)] text-[var(--color-message-assistant-text)] rounded-tl-sm border border-[var(--color-border)]'
                     }`}>
-                        <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <div className="prose prose-sm dark:prose-invert max-w-none break-words">
                             <ReactMarkdown>{message.content}</ReactMarkdown>
                         </div>
                     </div>
 
-                    {/* Copy Button */}
+                    {/* Кнопка копирования */}
                     <button
                         onClick={handleCopy}
-                        className={`absolute -top-2 ${isUser ? '-left-10' : '-right-10'} 
-              opacity-0 group-hover:opacity-100 transition-opacity p-2 
-              hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg`}
+                        className={`absolute top-0 ${isUser ? 'left-0 -translate-x-full -ml-2' : 'right-0 translate-x-full mr-2'} 
+                            opacity-0 group-hover:opacity-100 transition-all p-2 
+                            bg-[var(--color-input-bg)] hover:bg-[var(--color-hover)] 
+                            border border-[var(--color-border)] rounded-lg shadow-sm
+                            text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]`}
                         title="Копировать"
                     >
                         {copied ? (
-                            <Check size={16} className="text-green-600" />
+                            <Check size={14} className="text-green-500" />
                         ) : (
-                            <Copy size={16} className="text-gray-500" />
+                            <Copy size={14} />
                         )}
                     </button>
                 </div>

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Sidebar } from '../sidebar/Sidebar';
 import { ChatWindow } from '../chat/ChatWindow';
-//import { SettingsPanel } from '../settings/SettingsPanel';
-import type {Chat, Message, Settings} from '../../types';
+import { SettingsPanel } from '../settings/SettingsPanel';
+import type { Chat, Message, Settings } from '../../types';
 
 interface AppLayoutProps {
     chats: Chat[];
@@ -34,7 +34,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                                                         settings,
                                                         isTyping,
                                                         isGenerating,
-                                                        //isSettingsOpen,
+                                                        isSettingsOpen,
                                                         isSidebarOpen,
                                                         onNewChat,
                                                         onSearchChange,
@@ -42,21 +42,27 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                                                         onSendMessage,
                                                         onStopGeneration,
                                                         onOpenSettings,
+                                                        onCloseSettings,
+                                                        onSaveSettings,
+                                                        onResetSettings,
                                                         onToggleSidebar,
                                                     }) => {
     const activeChat = chats.find(chat => chat.id === activeChatId);
 
-    // Apply theme
-    React.useEffect(() => {
+    // Apply theme using CSS variables
+    useEffect(() => {
         if (settings.theme === 'dark') {
             document.documentElement.classList.add('dark');
+            // Также устанавливаем data-атрибут для дополнительной совместимости
+            document.documentElement.setAttribute('data-theme', 'dark');
         } else {
             document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
         }
     }, [settings.theme]);
 
     return (
-        <div className="flex h-screen bg-white dark:bg-gray-900">
+        <div className="flex h-screen bg-[var(--color-bg)] text-[var(--color-text)]">
             {/* Sidebar */}
             <Sidebar
                 chats={chats}
@@ -79,6 +85,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 onStopGeneration={onStopGeneration}
                 onOpenSettings={onOpenSettings}
                 onToggleSidebar={onToggleSidebar}
+            />
+
+            {/* Settings Panel */}
+            <SettingsPanel
+                isOpen={isSettingsOpen}
+                onClose={onCloseSettings}
+                settings={settings}
+                onSave={onSaveSettings}
+                onReset={onResetSettings}
             />
         </div>
     );

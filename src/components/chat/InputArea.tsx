@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Send, Square, Paperclip } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -17,18 +17,39 @@ export const InputArea: React.FC<InputAreaProps> = ({
                                                     }) => {
     const [input, setInput] = useState('');
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const [showScrollbar, setShowScrollbar] = useState(false);
 
-    useEffect(() => {
+    React.useEffect(() => {
         if (textareaRef.current) {
+            // Сбрасываем высоту перед вычислением
             textareaRef.current.style.height = 'auto';
-            textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
+
+            // Вычисляем новую высоту
+            const scrollHeight = textareaRef.current.scrollHeight;
+            const newHeight = Math.min(scrollHeight, 100);
+
+            // Устанавливаем высоту
+            textareaRef.current.style.height = `${newHeight}px`;
+
+            // Показываем скроллбар только если контент превышает maxHeight
+            setShowScrollbar(scrollHeight > 100);
+        }
+    }, [input]);
+
+    // Дополнительный эффект для сброса скроллбара при очистке
+    React.useEffect(() => {
+        if (!input && textareaRef.current) {
+            textareaRef.current.style.height = 'auto';
+            setShowScrollbar(false);
         }
     }, [input]);
 
     const handleSubmit = () => {
-        if (input.trim() && !disabled) {
+        if (input.trim() && !disabled && !isGenerating) {
             onSendMessage(input.trim());
             setInput('');
+            // Сброс скроллбара после отправки
+            setShowScrollbar(false);
             if (textareaRef.current) {
                 textareaRef.current.style.height = 'auto';
             }
@@ -43,57 +64,82 @@ export const InputArea: React.FC<InputAreaProps> = ({
     };
 
     return (
-        <div className="border-t border-gray-200 dark:border-gray-800 p-4 bg-white dark:bg-gray-900">
-            <div className="max-w-4xl mx-auto">
-                <div className="relative flex items-end gap-2 bg-gray-100 dark:bg-gray-800 rounded-2xl p-2">
-                    {/* Attach Button */}
-                    <button
-                        className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                        title="Прикрепить файл"
-                    >
-                        <Paperclip size={20} />
-                    </button>
+        <div className="px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-4">
+            <div className="flex items-end gap-1 xs:gap-2">
+                {/* Кнопка прикрепления */}
+                <button
+                    className="hidden xs:block p-2 xs:p-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] rounded-lg xs:rounded-xl transition-all flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Прикрепить файл"
+                    disabled={disabled || isGenerating}
+                >
+                    <Paperclip size={16} className="xs:w-[18px] xs:h-[18px]" />
+                </button>
 
-                    {/* Textarea */}
+                {/* Textarea */}
+                <div className="flex-1 min-w-0 relative">
                     <textarea
                         ref={textareaRef}
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Введите сообщение..."
-                        disabled={disabled}
+                        placeholder="Сообщение..."
+                        disabled={disabled || isGenerating}
                         rows={1}
-                        className="flex-1 bg-transparent border-0 resize-none focus:ring-0 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 py-2 px-2 max-h-[150px]"
-                        style={{ minHeight: '40px' }}
+                        className={`
+                            w-full bg-[var(--color-input-bg)] border border-[var(--color-border)] 
+                            rounded-lg xs:rounded-xl py-2 xs:py-2.5 px-3 xs:px-4 
+                            text-xs xs:text-sm text-[var(--color-text)] 
+                            placeholder-[var(--color-text-muted)] 
+                            focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 
+                            resize-none disabled:opacity-50 disabled:cursor-not-allowed
+                            transition-all duration-200
+                            ${showScrollbar ? 'overflow-y-auto' : 'overflow-y-hidden'}
+                        `}
+                        style={{
+                            minHeight: '36px',
+                            maxHeight: '100px',
+                            scrollbarWidth: showScrollbar ? 'thin' : 'none',
+                            msOverflowStyle: showScrollbar ? 'auto' : 'none'
+                        }}
                     />
-
-                    {/* Send/Stop Button */}
-                    {isGenerating ? (
-                        <Button
-                            onClick={onStopGeneration}
-                            variant="danger"
-                            size="sm"
-                            className="flex-shrink-0"
-                        >
-                            <Square size={16} />
-                            Стоп
-                        </Button>
-                    ) : (
-                        <Button
-                            onClick={handleSubmit}
-                            disabled={!input.trim() || disabled}
-                            size="sm"
-                            className="flex-shrink-0"
-                        >
-                            <Send size={16} />
-                            Отправить
-                        </Button>
-                    )}
                 </div>
 
-                <p className="text-xs text-center text-gray-500 dark:text-gray-400 mt-2">
-                    Нажмите Enter для отправки, Shift+Enter для новой строки
-                </p>
+                {/* Send/Stop Button */}
+                {isGenerating ? (
+                    <Button
+                        onClick={onStopGeneration}
+                        variant="danger"
+                        size="sm"
+                        className="flex-shrink-0 px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 text-xs xs:text-sm bg-red-500 hover:bg-red-600 text-white border-0 rounded-lg xs:rounded-xl"
+                    >
+                        <Square size={14} className="xs:w-4 xs:h-4 sm:mr-1" />
+                        <span className="hidden xs:inline">Стоп</span>
+                    </Button>
+                ) : (
+                    <Button
+                        onClick={handleSubmit}
+                        disabled={!input.trim() || disabled}
+                        variant="primary"
+                        size="sm"
+                        className="flex-shrink-0 px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 text-xs xs:text-sm bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white border-0 rounded-lg xs:rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Send size={14} className="xs:w-4 xs:h-4 sm:mr-1" />
+                    </Button>
+                )}
+            </div>
+
+            {/* Подсказка */}
+            <div className="hidden xs:flex items-center justify-center gap-1 sm:gap-2 text-xs text-[var(--color-text-muted)] mt-2">
+                <span>Enter</span>
+                <kbd className="px-1.5 py-0.5 bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded text-[10px] sm:text-xs">
+                    ↵
+                </kbd>
+                <span className="hidden sm:inline">- отправить,</span>
+                <span className="sm:hidden">- отпр,</span>
+                <kbd className="px-1.5 py-0.5 bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded text-[10px] sm:text-xs">
+                    ⇧+↵
+                </kbd>
+                <span>- новая строка</span>
             </div>
         </div>
     );
