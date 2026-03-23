@@ -5,14 +5,14 @@ import { Button } from '../ui/Button';
 interface InputAreaProps {
     onSendMessage: (message: string) => void;
     onStopGeneration?: () => void;
-    isGenerating?: boolean;
+    isLoading?: boolean;
     disabled?: boolean;
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({
                                                         onSendMessage,
                                                         onStopGeneration,
-                                                        isGenerating = false,
+                                                        isLoading = false,
                                                         disabled = false,
                                                     }) => {
     const [input, setInput] = useState('');
@@ -45,7 +45,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
     }, [input]);
 
     const handleSubmit = () => {
-        if (input.trim() && !disabled && !isGenerating) {
+        if (input.trim() && !disabled && !isLoading) {
             onSendMessage(input.trim());
             setInput('');
             // Сброс скроллбара после отправки
@@ -65,47 +65,48 @@ export const InputArea: React.FC<InputAreaProps> = ({
 
     return (
         <div className="px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-4">
-            <div className="flex items-end gap-1 xs:gap-2">
+            {/* Убрали items-end, добавили items-center */}
+            <div className="flex items-center gap-1 xs:gap-2">
                 {/* Кнопка прикрепления */}
                 <button
                     className="hidden xs:block p-2 xs:p-2.5 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] rounded-lg xs:rounded-xl transition-all flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Прикрепить файл"
-                    disabled={disabled || isGenerating}
+                    disabled={disabled || isLoading}
                 >
                     <Paperclip size={16} className="xs:w-[18px] xs:h-[18px]" />
                 </button>
 
                 {/* Textarea */}
                 <div className="flex-1 min-w-0 relative">
-                    <textarea
-                        ref={textareaRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Сообщение..."
-                        disabled={disabled || isGenerating}
-                        rows={1}
-                        className={`
-                            w-full bg-[var(--color-input-bg)] border border-[var(--color-border)] 
-                            rounded-lg xs:rounded-xl py-2 xs:py-2.5 px-3 xs:px-4 
-                            text-xs xs:text-sm text-[var(--color-text)] 
-                            placeholder-[var(--color-text-muted)] 
-                            focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 
-                            resize-none disabled:opacity-50 disabled:cursor-not-allowed
-                            transition-all duration-200
-                            ${showScrollbar ? 'overflow-y-auto' : 'overflow-y-hidden'}
-                        `}
-                        style={{
-                            minHeight: '36px',
-                            maxHeight: '100px',
-                            scrollbarWidth: showScrollbar ? 'thin' : 'none',
-                            msOverflowStyle: showScrollbar ? 'auto' : 'none'
-                        }}
-                    />
+                <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Сообщение..."
+                    disabled={disabled || isLoading}
+                    rows={1}
+                    className={`
+                        w-full bg-[var(--color-input-bg)] border border-[var(--color-border)] 
+                        rounded-lg xs:rounded-xl py-2 xs:py-2.5 px-3 xs:px-4 
+                        text-xs xs:text-sm text-[var(--color-text)] 
+                        placeholder-[var(--color-text-muted)] 
+                        focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 
+                        resize-none disabled:opacity-50 disabled:cursor-not-allowed
+                        transition-all duration-200
+                        ${showScrollbar ? 'overflow-y-auto' : 'overflow-y-hidden'}
+                    `}
+                    style={{
+                        minHeight: '40px',  // Немного увеличили для лучшего выравнивания
+                        maxHeight: '120px',  // Можно увеличить если нужно
+                        scrollbarWidth: showScrollbar ? 'thin' : 'none',
+                        msOverflowStyle: showScrollbar ? 'auto' : 'none'
+                    }}
+                />
                 </div>
 
                 {/* Send/Stop Button */}
-                {isGenerating ? (
+                {isLoading ? (
                     <Button
                         onClick={onStopGeneration}
                         variant="danger"
@@ -121,7 +122,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                         disabled={!input.trim() || disabled}
                         variant="primary"
                         size="sm"
-                        className="flex-shrink-0 px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 text-xs xs:text-sm bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white border-0 rounded-lg xs:rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-shrink-0 px-2 xs:px-3 sm:px-4 py-2 xs:py-2.5 text-xs xs:text-sm bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white border-0 rounded-lg xs:rounded-xl"
                     >
                         <Send size={14} className="xs:w-4 xs:h-4 sm:mr-1" />
                     </Button>

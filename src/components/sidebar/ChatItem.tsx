@@ -32,23 +32,27 @@ export const ChatItem: React.FC<ChatItemProps> = ({
             className={`group relative p-4 mb-2 rounded-xl cursor-pointer transition-all duration-200 ${
                 isActive
                     ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-300'
+                    : 'hover:bg-[var(--color-hover)] dark:hover:bg-[var(--color-hover)]'
             }`}
         >
             <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                     <h3 className={`font-semibold text-sm truncate ${
-                        isActive ? 'text-white' : 'dark:text-white'
+                        isActive ? 'text-white' : 'text-[var(--color-text)] dark:text-gray-200'
                     }`}>
                         {chat.title}
                     </h3>
                     <p className={`text-xs truncate mt-1 ${
-                        isActive ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
+                        isActive
+                            ? 'text-blue-100'
+                            : 'text-[var(--color-text-muted)] dark:text-gray-400'
                     }`}>
                         {chat.lastMessage}
                     </p>
                     <p className={`text-xs mt-2 ${
-                        isActive ? 'text-blue-100' : 'text-gray-400 dark:text-gray-500'
+                        isActive
+                            ? 'text-blue-100'
+                            : 'text-[var(--color-text-muted)] dark:text-gray-500'
                     }`}>
                         {formatDate(chat.lastMessageTime)}
                     </p>

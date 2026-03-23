@@ -227,8 +227,9 @@ pre {
 }
 
 .dark pre {
-    background: #1f2937;
-    color: #f3f4f6;
+    background: #0f172a;
+    color: #e2e8f0;
+    border: 1px solid #1e293b;
 }
 
 code {

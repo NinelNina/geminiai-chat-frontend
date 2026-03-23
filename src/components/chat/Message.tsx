@@ -5,12 +5,14 @@ import type { Message as MessageType } from '../../types';
 
 interface MessageProps {
     message: MessageType;
+    variant?: 'user' | 'assistant';
 }
 
-export const Message: React.FC<MessageProps> = ({ message }) => {
+export const Message: React.FC<MessageProps> = ({ message, variant }) => {
     const [copied, setCopied] = useState(false);
 
-    const isUser = message.role === 'user';
+    const messageVariant = variant || (message.role === 'user' ? 'user' : 'assistant');
+    const isUser = messageVariant === 'user';
 
     const handleCopy = async () => {
         await navigator.clipboard.writeText(message.content);
@@ -37,17 +39,21 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
             <div className={`flex-1 max-w-3xl ${isUser ? 'text-right' : 'text-left'}`}>
                 {/* Имя отправителя */}
                 <span className="text-sm font-medium text-[var(--color-text-secondary)] mb-1.5 block">
-                    {isUser ? 'Вы' : 'GigaChat'}
-                </span>
+            {isUser ? 'Вы' : 'GigaChat'}
+        </span>
 
                 {/* Сообщение с кнопкой копирования */}
                 <div className="relative group inline-block max-w-full">
-                    <div className={`inline-block text-left px-5 py-3.5 rounded-2xl shadow-sm ${
-                        isUser
-                            ? 'bg-[var(--color-message-user)] text-[var(--color-message-user-text)] rounded-tr-sm'
-                            : 'bg-[var(--color-message-assistant)] text-[var(--color-message-assistant-text)] rounded-tl-sm border border-[var(--color-border)]'
-                    }`}>
-                        <div className="prose prose-sm dark:prose-invert max-w-none break-words">
+                    <div className={`
+                inline-block text-left px-5 py-3.5 rounded-2xl shadow-sm 
+                max-w-full sm:max-w-[min(100%,400px)] md:max-w-[min(100%,500px)]
+                break-words overflow-wrap-break-word whitespace-pre-wrap
+                ${isUser
+                        ? 'bg-[var(--color-message-user)] text-[var(--color-message-user-text)] rounded-tr-sm'
+                        : 'bg-[var(--color-message-assistant)] text-[var(--color-message-assistant-text)] rounded-tl-sm border border-[var(--color-border)]'
+                    }
+            `}>
+                        <div className="prose prose-sm dark:prose-invert max-w-none break-words overflow-hidden">
                             <ReactMarkdown>{message.content}</ReactMarkdown>
                         </div>
                     </div>
@@ -55,11 +61,11 @@ export const Message: React.FC<MessageProps> = ({ message }) => {
                     {/* Кнопка копирования */}
                     <button
                         onClick={handleCopy}
-                        className={`absolute top-0 ${isUser ? 'left-0 -translate-x-full -ml-2' : 'right-0 translate-x-full mr-2'} 
-                            opacity-0 group-hover:opacity-100 transition-all p-2 
-                            bg-[var(--color-input-bg)] hover:bg-[var(--color-hover)] 
-                            border border-[var(--color-border)] rounded-lg shadow-sm
-                            text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]`}
+                        className={`absolute top-0 ${isUser ? 'left-0 -translate-x-full -ml-2' : 'right-0 translate-x-full mr-2'}
+                opacity-0 group-hover:opacity-100 transition-all p-2
+                bg-[var(--color-input-bg)] hover:bg-[var(--color-hover)]
+                border border-[var(--color-border)] rounded-lg shadow-sm
+                text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]`}
                         title="Копировать"
                     >
                         {copied ? (

@@ -1,9 +1,4 @@
-export interface Message {
-    id: string;
-    content: string;
-    role: 'user' | 'assistant';
-    timestamp: Date;
-}
+export type { Message } from './message';
 
 export interface Chat {
     id: string;

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppLayout } from './components/layout/AppLayout';
-import { mockChats, mockMessages, defaultSettings } from './mocks/data';
-import type {AuthCredentials, Chat, Message, Settings} from './types';
+import { mockChats, defaultSettings } from './mocks/data';
+import type {AuthCredentials, Chat, Settings} from './types';
 import {AuthForm} from "./components/auth/AuthForm.tsx";
 
 function App() {
@@ -10,13 +10,10 @@ function App() {
 
     // Chat state
     const [chats, setChats] = useState<Chat[]>(mockChats);
-    const [messages, setMessages] = useState<Message[]>(mockMessages);
     const [activeChatId, setActiveChatId] = useState<string | null>('1');
     const [searchQuery, setSearchQuery] = useState('');
 
     // UI state
-    const [isTyping, setIsTyping] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -60,63 +57,31 @@ function App() {
         };
         setChats([newChat, ...chats]);
         setActiveChatId(newChat.id);
-        setMessages([]);
     };
 
     const handleSelectChat = (id: string) => {
         setActiveChatId(id);
         setIsSidebarOpen(false);
-        setMessages(mockMessages);
     };
 
     const handleSendMessage = (content: string) => {
-        const userMessage: Message = {
-            id: Date.now().toString(),
-            content,
-            role: 'user',
-            timestamp: new Date(),
-        };
+        console.log('Message sent:', content);
 
-        setMessages(prev => [...prev, userMessage]);
-        setIsGenerating(true);
-        setIsTyping(true);
-
-        // Обновляем последнее сообщение в чате
+        // Обновляем lastMessage в чате (опционально, для сайдбара)
         if (activeChatId) {
             setChats(prevChats =>
                 prevChats.map(chat =>
                     chat.id === activeChatId
-                        ? {
-                            ...chat,
-                            lastMessage: content,
-                            lastMessageTime: new Date(),
-                        }
+                        ? { ...chat, lastMessage: content, lastMessageTime: new Date() }
                         : chat
                 )
             );
         }
-
-        // Mock AI response after delay
-        setTimeout(() => {
-            setIsTyping(false);
-
-            setTimeout(() => {
-                const aiMessage: Message = {
-                    id: (Date.now() + 1).toString(),
-                    content: 'Это моковый ответ от GigaChat. В реальной версии здесь будет ответ от API.',
-                    role: 'assistant',
-                    timestamp: new Date(),
-                };
-                setMessages(prev => [...prev, aiMessage]);
-                setIsGenerating(false);
-            }, 1000);
-        }, 1500);
     };
 
-    const handleStopGeneration = () => {
-        setIsGenerating(false);
-        setIsTyping(false);
-    };
+    // const handleStopGeneration = () => {
+    //     setIsLoading(false);
+    // };
 
     // Settings handlers
     const handleSaveSettings = (newSettings: Settings) => {
@@ -139,19 +104,16 @@ function App() {
     return (
         <AppLayout
             chats={filteredChats}
-            messages={messages}
             activeChatId={activeChatId}
             searchQuery={searchQuery}
             settings={settings}
-            isTyping={isTyping}
-            isGenerating={isGenerating}
             isSettingsOpen={isSettingsOpen}
             isSidebarOpen={isSidebarOpen}
             onNewChat={handleNewChat}
             onSearchChange={setSearchQuery}
             onSelectChat={handleSelectChat}
             onSendMessage={handleSendMessage}
-            onStopGeneration={handleStopGeneration}
+            //onStopGeneration={handleStopGeneration}
             onOpenSettings={() => setIsSettingsOpen(true)}
             onCloseSettings={() => setIsSettingsOpen(false)}
             onSaveSettings={handleSaveSettings}

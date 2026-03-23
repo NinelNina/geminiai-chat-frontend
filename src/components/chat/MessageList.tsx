@@ -6,12 +6,12 @@ import {Bot} from "lucide-react";
 
 interface MessageListProps {
     messages: MessageType[];
-    isTyping?: boolean;
+    isLoading?: boolean;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
                                                             messages,
-                                                            isTyping = false
+                                                            isLoading = false
                                                         }) => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -21,7 +21,7 @@ export const MessageList: React.FC<MessageListProps> = ({
 
     useEffect(() => {
         scrollToBottom();
-    }, [messages, isTyping]);
+    }, [messages, isLoading]);
 
     return (
         <div className="flex-1 overflow-y-auto">
@@ -41,10 +41,14 @@ export const MessageList: React.FC<MessageListProps> = ({
                 ) : (
                     <>
                         {messages.map((message, index) => (
-                            <Message key={message.id || index} message={message} />
+                            <Message
+                                key={message.id || index}
+                                message={message}
+                                variant={message.role === 'user' ? 'user' : 'assistant'}
+                            />
                         ))}
 
-                        {isTyping && <TypingIndicator isVisible={true} />}
+                        {isLoading && <TypingIndicator isVisible={true} />}
                     </>
                 )}
 

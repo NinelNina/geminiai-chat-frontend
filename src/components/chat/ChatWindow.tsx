@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Settings, Menu } from 'lucide-react';
 import { MessageList } from './MessageList';
 import { InputArea } from './InputArea';
@@ -6,22 +6,18 @@ import type { Message as MessageType } from '../../types';
 
 interface ChatWindowProps {
     chatTitle: string;
-    messages: MessageType[];
-    isTyping?: boolean;
-    isGenerating?: boolean;
+    initialMessages?: MessageType[];
     onSendMessage: (message: string) => void;
-    onStopGeneration?: () => void;
+    //onStopGeneration?: () => void;
     onOpenSettings: () => void;
     onToggleSidebar?: () => void;
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({
                                                           chatTitle,
-                                                          messages,
-                                                          isTyping = false,
-                                                          isGenerating = false,
+                                                          initialMessages = [],
                                                           onSendMessage,
-                                                          onStopGeneration,
+                                                          //onStopGeneration,
                                                           onOpenSettings,
                                                           onToggleSidebar,
                                                       }) => {
@@ -40,6 +36,37 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             localStorage.setItem('theme', 'light');
         }
     }, [isDark]);
+
+    const [messages, setMessages] = useState<MessageType[]>(initialMessages);
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSendMessage = (content: string) => {
+        const userMessage: MessageType = {
+            id: Date.now().toString(),
+            content,
+            role: 'user',
+            timestamp: new Date(),
+        };
+
+        setMessages(prev => [...prev, userMessage]);
+        setIsLoading(true);
+        onSendMessage(content);
+
+        setTimeout(() => {
+            const aiMessage: MessageType = {
+                id: (Date.now() + 1).toString(),
+                content: 'Это моковый ответ от GigaChat.',
+                role: 'assistant',
+                timestamp: new Date(),
+            };
+            setMessages(prev => [...prev, aiMessage]);
+            setIsLoading(false);
+        }, 2000);
+    };
+
+    const handleStopGeneration = () => {
+        setIsLoading(false);
+    };
 
     return (
         <main className="flex-1 flex flex-col h-screen bg-[var(--color-chat-bg)] min-w-[320px]">
@@ -93,10 +120,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                                 </p>
                             </div>
                         ) : (
-                            <MessageList
-                                messages={messages}
-                                isTyping={isTyping}
-                            />
+                            <MessageList messages={messages} isLoading={isLoading} />
                         )}
                     </div>
                 </div>
@@ -106,9 +130,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             <div className="border-t border-[var(--color-border)] bg-[var(--color-sidebar-bg)]/50 backdrop-blur-sm">
                 <div className="max-w-3xl mx-auto">
                     <InputArea
-                        onSendMessage={onSendMessage}
-                        onStopGeneration={onStopGeneration}
-                        isGenerating={isGenerating}
+                        onSendMessage={handleSendMessage}
+                        onStopGeneration={handleStopGeneration}
+                        isLoading={isLoading}
                     />
                 </div>
             </div>

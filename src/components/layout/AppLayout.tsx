@@ -2,23 +2,22 @@ import React, { useEffect } from 'react';
 import { Sidebar } from '../sidebar/Sidebar';
 import { ChatWindow } from '../chat/ChatWindow';
 import { SettingsPanel } from '../settings/SettingsPanel';
-import type { Chat, Message, Settings } from '../../types';
+import type { Chat, Settings } from '../../types';
+import { mockMessagesByChatId } from '../../mocks/data';
+
 
 interface AppLayoutProps {
     chats: Chat[];
-    messages: Message[];
     activeChatId: string | null;
     searchQuery: string;
     settings: Settings;
-    isTyping: boolean;
-    isGenerating: boolean;
     isSettingsOpen: boolean;
     isSidebarOpen: boolean;
     onNewChat: () => void;
     onSearchChange: (query: string) => void;
     onSelectChat: (id: string) => void;
     onSendMessage: (message: string) => void;
-    onStopGeneration: () => void;
+    //onStopGeneration: () => void;
     onOpenSettings: () => void;
     onCloseSettings: () => void;
     onSaveSettings: (settings: Settings) => void;
@@ -28,19 +27,16 @@ interface AppLayoutProps {
 
 export const AppLayout: React.FC<AppLayoutProps> = ({
                                                         chats,
-                                                        messages,
                                                         activeChatId,
                                                         searchQuery,
                                                         settings,
-                                                        isTyping,
-                                                        isGenerating,
                                                         isSettingsOpen,
                                                         isSidebarOpen,
                                                         onNewChat,
                                                         onSearchChange,
                                                         onSelectChat,
                                                         onSendMessage,
-                                                        onStopGeneration,
+                                                        //onStopGeneration,
                                                         onOpenSettings,
                                                         onCloseSettings,
                                                         onSaveSettings,
@@ -48,6 +44,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                                                         onToggleSidebar,
                                                     }) => {
     const activeChat = chats.find(chat => chat.id === activeChatId);
+    const initialMessages = activeChat
+        ? mockMessagesByChatId[activeChat.id] || []
+        : [];
 
     // Apply theme using CSS variables
     useEffect(() => {
@@ -77,12 +76,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
             {/* Main Chat Area */}
             <ChatWindow
+                key={activeChatId}
                 chatTitle={activeChat?.title || 'Новый чат'}
-                messages={messages}
-                isTyping={isTyping}
-                isGenerating={isGenerating}
+                initialMessages={initialMessages}
                 onSendMessage={onSendMessage}
-                onStopGeneration={onStopGeneration}
+                //onStopGeneration={onStopGeneration}
                 onOpenSettings={onOpenSettings}
                 onToggleSidebar={onToggleSidebar}
             />
