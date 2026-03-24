@@ -24,12 +24,9 @@ export const TypingIndicator: React.FC<TypingIndicatorProps> = ({ isVisible = tr
                 {/* Анимированные точки */}
                 <div className="inline-block bg-[var(--color-message-assistant)] border border-[var(--color-border)] rounded-2xl rounded-tl-sm px-5 py-4">
                     <div className="flex gap-1.5">
-                        <span className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce"
-                              style={{ animationDelay: '0ms', animationDuration: '1s' }} />
-                        <span className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce"
-                              style={{ animationDelay: '150ms', animationDuration: '1s' }} />
-                        <span className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce"
-                              style={{ animationDelay: '300ms', animationDuration: '1s' }} />
+                        <span className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce typing-dot" />
+                        <span className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce typing-dot" />
+                        <span className="w-2 h-2 bg-[var(--color-text-muted)] rounded-full animate-bounce typing-dot" />
                     </div>
                 </div>
             </div>

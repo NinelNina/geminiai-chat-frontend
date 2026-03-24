@@ -45,14 +45,15 @@ export const Message: React.FC<MessageProps> = ({ message, variant }) => {
                 {/* Сообщение с кнопкой копирования */}
                 <div className="relative group inline-block max-w-full">
                     <div className={`
-                inline-block text-left px-5 py-3.5 rounded-2xl shadow-sm 
-                max-w-full sm:max-w-[min(100%,400px)] md:max-w-[min(100%,500px)]
-                break-words overflow-wrap-break-word whitespace-pre-wrap
-                ${isUser
+                      inline-block text-left px-5 py-3.5 rounded-2xl shadow-sm
+                      max-w-full sm:max-w-[min(100%,400px)] md:max-w-[min(100%,500px)]
+                      break-words overflow-wrap-break-word whitespace-pre-wrap
+                      message-content
+                      ${isUser 
                         ? 'bg-[var(--color-message-user)] text-[var(--color-message-user-text)] rounded-tr-sm'
                         : 'bg-[var(--color-message-assistant)] text-[var(--color-message-assistant-text)] rounded-tl-sm border border-[var(--color-border)]'
-                    }
-            `}>
+                      }
+                    `}>
                         <div className="prose prose-sm dark:prose-invert max-w-none break-words overflow-hidden">
                             <ReactMarkdown>{message.content}</ReactMarkdown>
                         </div>

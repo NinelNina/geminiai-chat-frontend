@@ -87,21 +87,16 @@ export const InputArea: React.FC<InputAreaProps> = ({
                     disabled={disabled || isLoading}
                     rows={1}
                     className={`
-                        w-full bg-[var(--color-input-bg)] border border-[var(--color-border)] 
-                        rounded-lg xs:rounded-xl py-2 xs:py-2.5 px-3 xs:px-4 
-                        text-xs xs:text-sm text-[var(--color-text)] 
-                        placeholder-[var(--color-text-muted)] 
-                        focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50 
+                        w-full bg-[var(--color-input-bg)] border border-[var(--color-border)]
+                        rounded-lg xs:rounded-xl py-2 xs:py-2.5 px-3 xs:px-4
+                        text-xs xs:text-sm text-[var(--color-text)]
+                        placeholder-[var(--color-text-muted)]
+                        focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/50
                         resize-none disabled:opacity-50 disabled:cursor-not-allowed
                         transition-all duration-200
-                        ${showScrollbar ? 'overflow-y-auto' : 'overflow-y-hidden'}
-                    `}
-                    style={{
-                        minHeight: '40px',  // Немного увеличили для лучшего выравнивания
-                        maxHeight: '120px',  // Можно увеличить если нужно
-                        scrollbarWidth: showScrollbar ? 'thin' : 'none',
-                        msOverflowStyle: showScrollbar ? 'auto' : 'none'
-                    }}
+                        textarea-autoresize
+                        ${showScrollbar ? 'show-scrollbar' : 'hide-scrollbar'}
+                      `}
                 />
                 </div>
 
