@@ -123,17 +123,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
 
-  if (!currentChat) {
-    return (
-        <div className="flex-1 flex items-center justify-center bg-[var(--color-chat-bg)]">
-          <div className="text-center p-8">
-            <h2 className="text-2xl font-bold mb-2">Выберите чат</h2>
-            <p className="text-[var(--color-text-muted)]">Начните новый разговор или выберите существующий из списка.</p>
-          </div>
-        </div>
-    );
-  }
-
   return (
       <main className="flex-1 flex flex-col h-screen bg-[var(--color-chat-bg)] overflow-hidden">
         <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border)] bg-[var(--color-sidebar-bg)]/80 backdrop-blur-md sticky top-0 z-10">
@@ -141,39 +130,54 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             <button
                 onClick={onToggleSidebar}
                 className="lg:hidden p-2 hover:bg-[var(--color-hover)] rounded-lg transition-colors border border-[var(--color-border)]"
+                aria-label="Меню"
             >
               <Menu size={20} className="text-[var(--color-text-secondary)]" />
             </button>
 
-            <div className="min-w-0">
-              <h2 className="text-lg font-bold text-[var(--color-text)] truncate">
-                {currentChat.title}
-              </h2>
-              <p className="text-xs text-[var(--color-text-muted)] opacity-60 uppercase tracking-widest font-bold">
-                {currentChat.messages.length} {currentChat.messages.length === 1 ? 'сообщение' : 'сообщений'}
-              </p>
-            </div>
+            {currentChat && (
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-[var(--color-text)] truncate">
+                    {currentChat.title}
+                  </h2>
+                  <p className="text-xs text-[var(--color-text-muted)] opacity-60 uppercase tracking-widest font-bold">
+                    {currentChat.messages.length} {currentChat.messages.length === 1 ? 'сообщение' : 'сообщений'}
+                  </p>
+                </div>
+            )}
           </div>
 
           <button
               onClick={onOpenSettings}
               className="p-2 hover:bg-[var(--color-hover)] rounded-lg transition-colors border border-[var(--color-border)] text-[var(--color-text-secondary)]"
               title="Настройки"
+              aria-label="Настройки"
           >
             <Settings size={20} />
           </button>
         </header>
 
-        <MessageList
-            messages={currentChat.messages}
-            isLoading={state.isLoading}
-        />
+        {!currentChat ? (
+            <div className="flex-1 flex items-center justify-center bg-[var(--color-chat-bg)]">
+              <div className="text-center p-8">
+                <h2 className="text-2xl font-bold mb-2">Выберите чат</h2>
+                <p className="text-[var(--color-text-muted)]">Начните новый разговор или выберите существующий из списка.</p>
+              </div>
+            </div>
+        ) : (
+            <>
+              <MessageList
+                  messages={currentChat.messages}
+                  isLoading={state.isLoading}
+              />
 
-        <InputArea
-            onSendMessage={handleSendMessage}
-            onStopGeneration={handleStopGeneration}
-            isLoading={state.isLoading}
-        />
+              <InputArea
+                  onSendMessage={handleSendMessage}
+                  onStopGeneration={handleStopGeneration}
+                  isLoading={state.isLoading}
+              />
+            </>
+        )}
       </main>
   );
 };

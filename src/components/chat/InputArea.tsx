@@ -1,10 +1,5 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Square, Paperclip } from 'lucide-react';
+import { Send, Square, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { Button } from '../ui/Button';
 
 interface InputAreaProps {
@@ -48,34 +43,53 @@ export const InputArea: React.FC<InputAreaProps> = ({
     }
   };
 
+  const processFile = (file: File): Promise<{ mimeType: string; data: string; name: string }> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        const base64Data = result.split(',')[1];
+        resolve({
+          mimeType: file.type,
+          data: base64Data,
+          name: file.name
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    const newFiles: { mimeType: string; data: string; name: string }[] = [];
-
+    const filePromises: Promise<{ mimeType: string; data: string; name: string }>[] = [];
     for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const reader = new FileReader();
-
-      const filePromise = new Promise<{ mimeType: string; data: string; name: string }>((resolve) => {
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          const base64Data = result.split(',')[1];
-          resolve({
-            mimeType: file.type,
-            data: base64Data,
-            name: file.name
-          });
-        };
-      });
-
-      reader.readAsDataURL(file);
-      newFiles.push(await filePromise);
+      filePromises.push(processFile(files[i]));
     }
 
+    const newFiles = await Promise.all(filePromises);
     setAttachedFiles(prev => [...prev, ...newFiles]);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    const filePromises: Promise<{ mimeType: string; data: string; name: string }>[] = [];
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].kind === 'file') {
+        const file = items[i].getAsFile();
+        if (file) {
+          filePromises.push(processFile(file));
+        }
+      }
+    }
+
+    if (filePromises.length > 0) {
+      const newFiles = await Promise.all(filePromises);
+      setAttachedFiles(prev => [...prev, ...newFiles]);
+    }
   };
 
   const removeFile = (index: number) => {
@@ -93,18 +107,44 @@ export const InputArea: React.FC<InputAreaProps> = ({
       <div className="px-4 py-4 border-t border-[var(--color-border)] bg-[var(--color-sidebar-bg)]/50 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto">
           {attachedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {attachedFiles.map((file, i) => (
-                    <div key={i} className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-lg px-2 py-1 text-xs text-blue-500">
-                      <span className="truncate max-w-[150px]">{file.name}</span>
-                      <button
-                          onClick={() => removeFile(i)}
-                          className="hover:text-red-500 transition-colors"
+              <div className="flex flex-wrap gap-3 mb-4">
+                {attachedFiles.map((file, i) => {
+                  const isImage = file.mimeType.startsWith('image/');
+                  return (
+                      <div
+                          key={i}
+                          className="group relative flex items-center gap-3 bg-[var(--color-input-bg)] border border-[var(--color-border)] rounded-xl p-2 pr-10 shadow-sm"
                       >
-                        <Square size={10} fill="currentColor" />
-                      </button>
-                    </div>
-                ))}
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                          {isImage ? (
+                              <img
+                                  src={`data:${file.mimeType};base64,${file.data}`}
+                                  alt={file.name}
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                              />
+                          ) : (
+                              <FileText size={20} className="text-blue-500" />
+                          )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                    <span className="text-xs font-medium text-[var(--color-text)] truncate max-w-[120px]">
+                      {file.name}
+                    </span>
+                          <span className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-tighter">
+                      {file.mimeType.split('/')[1] || 'FILE'}
+                    </span>
+                        </div>
+                        <button
+                            onClick={() => removeFile(i)}
+                            className="absolute top-1 right-1 p-1 text-[var(--color-text-muted)] hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            aria-label="Удалить файл"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                  );
+                })}
               </div>
           )}
 
@@ -132,6 +172,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
+                onPaste={handlePaste}
                 placeholder="Спросите Gemini..."
                 disabled={disabled || isLoading}
                 rows={1}
