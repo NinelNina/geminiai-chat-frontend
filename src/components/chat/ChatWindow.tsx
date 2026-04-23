@@ -40,6 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSendMessage = async (content: string, files?: { mimeType: string; data: string; name: string }[]) => {
     if (!state.activeChatId || !apiKey) return;
 
+    // Create new abort controller for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
@@ -83,6 +84,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         files: files?.map(f => ({ mimeType: f.mimeType, data: f.data })),
         abortSignal: signal,
         onChunk: (chunk) => {
+          // Check if we should abort
           if (signal.aborted) {
             throw new Error('Generation stopped by user');
           }
@@ -115,8 +117,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     } catch (err: any) {
       if (err.name !== 'AbortError' && err.message !== 'Generation stopped by user' && !err?.message?.includes('abort')) {
         let errorMessage = err.message;
+        // Handle 429 Quota Exceeded error
         if (errorMessage?.includes('429') || errorMessage?.includes('Quota exceeded')) {
           errorMessage = 'Превышен лимит запросов к API Gemini (Quota exceeded). Пожалуйста, подождите некоторое время и попробуйте снова, или выберите другую модель в настройках.';
+        } else if (errorMessage?.includes('503') || errorMessage?.includes('high demand') || errorMessage?.includes('UNAVAILABLE')) {
+          errorMessage = 'Сервис Gemini временно перегружен (503 Service Unavailable). Это происходит из-за высокого спроса на модель. Пожалуйста, подождите пару минут и попробуйте отправить сообщение снова.';
         }
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
       }

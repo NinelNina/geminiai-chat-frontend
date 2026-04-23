@@ -3,7 +3,7 @@ import { Message } from '../types';
 
 export interface FilePart {
   mimeType: string;
-  data: string;
+  data: string; // base64
 }
 
 export const sendMessageToGemini = async (
@@ -122,8 +122,11 @@ export const generateChatTitle = async (apiKey: string, userModel: string, first
     const title = response.text.trim();
     return title.replace(/^["']|["']$/g, '');
   } catch (error: any) {
-    if (error?.message?.includes('429') || error?.message?.includes('Quota')) {
+    const errorMsg = error?.message || '';
+    if (errorMsg.includes('429') || errorMsg.includes('Quota')) {
       console.warn('Rate limit hit while generating chat title. Using fallback.');
+    } else if (errorMsg.includes('503') || errorMsg.includes('UNAVAILABLE')) {
+      console.warn('Gemini service unavailable (503) while generating title. Using fallback.');
     } else {
       console.error('Failed to generate title:', error);
     }
