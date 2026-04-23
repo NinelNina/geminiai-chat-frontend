@@ -40,7 +40,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleSendMessage = async (content: string, files?: { mimeType: string; data: string; name: string }[]) => {
     if (!state.activeChatId || !apiKey) return;
 
-    // Create new abort controller for this request
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
@@ -68,7 +67,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       // First message smart title generation (background)
       if (isFirstMessage && content) {
-        generateChatTitle(apiKey, content).then(title => {
+        generateChatTitle(apiKey, settings.model, content).then(title => {
           dispatch({
             type: 'UPDATE_CHAT',
             payload: { id: state.activeChatId!, title }
@@ -82,8 +81,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         topP: settings.topP,
         maxTokens: settings.maxTokens,
         files: files?.map(f => ({ mimeType: f.mimeType, data: f.data })),
+        abortSignal: signal,
         onChunk: (chunk) => {
-          // Check if we should abort
           if (signal.aborted) {
             throw new Error('Generation stopped by user');
           }
@@ -114,12 +113,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         }
       });
     } catch (err: any) {
-      if (err.message !== 'Generation stopped by user') {
-        dispatch({ type: 'SET_ERROR', payload: err.message });
+      if (err.name !== 'AbortError' && err.message !== 'Generation stopped by user' && !err?.message?.includes('abort')) {
+        let errorMessage = err.message;
+        if (errorMessage?.includes('429') || errorMessage?.includes('Quota exceeded')) {
+          errorMessage = 'Превышен лимит запросов к API Gemini (Quota exceeded). Пожалуйста, подождите некоторое время и попробуйте снова, или выберите другую модель в настройках.';
+        }
+        dispatch({ type: 'SET_ERROR', payload: errorMessage });
       }
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
-      abortControllerRef.current = null;
+      if (abortControllerRef.current?.signal === signal) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -170,6 +175,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                   messages={currentChat.messages}
                   isLoading={state.isLoading}
               />
+
+              {state.error && (
+                  <div className="mx-auto max-w-4xl w-full px-4 mb-2">
+                    <div className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-xl text-sm flex items-start gap-3">
+                      <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div className="flex-1 whitespace-pre-wrap">{state.error}</div>
+                    </div>
+                  </div>
+              )}
 
               <InputArea
                   onSendMessage={handleSendMessage}

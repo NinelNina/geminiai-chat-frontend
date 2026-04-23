@@ -3,7 +3,7 @@ import { Message } from '../types';
 
 export interface FilePart {
   mimeType: string;
-  data: string; // base64
+  data: string;
 }
 
 export const sendMessageToGemini = async (
@@ -14,59 +14,81 @@ export const sendMessageToGemini = async (
       temperature?: number;
       topP?: number;
       maxTokens?: number;
-      systemInstruction?: string;
       files?: FilePart[];
       onChunk?: (chunk: string) => void;
+      abortSignal?: AbortSignal;
     } = {}
 ) => {
-  const {
-    model = "gemini-1.5-flash",
-    temperature = 0.7,
-    topP = 0.9,
-    maxTokens = 2000,
-    systemInstruction,
-    files,
-    onChunk
-  } = options;
+  const { model = "gemini-3-flash-preview", temperature, topP, maxTokens, files, onChunk, abortSignal } = options;
   const ai = new GoogleGenAI({ apiKey });
 
-  const history = messages.slice(0, -1).map(msg => ({
-    role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: msg.content }]
-  }));
+  const validMessages = [];
+  for (let i = 0; i < messages.length; i++) {
+    const isLast = i === messages.length - 1;
+    const currentMsg = messages[i];
+    const nextMsg = messages[i + 1];
 
-  const lastMessage = messages[messages.length - 1];
+    if (currentMsg.role === 'user' && !isLast && nextMsg && nextMsg.role === 'user') {
+      continue;
+    }
+    validMessages.push(currentMsg);
+  }
 
-  const currentParts: any[] = [{ text: lastMessage.content }];
-  if (files && files.length > 0) {
-    files.forEach(file => {
-      currentParts.push({
-        inlineData: {
-          mimeType: file.mimeType,
-          data: file.data
-        }
+  const allContents: any[] = validMessages.map((msg, validIndex) => {
+    const parts: any[] = [{ text: msg.content }];
+
+    if (msg.attachments && msg.attachments.length > 0) {
+      msg.attachments.forEach(file => {
+        parts.push({
+          inlineData: {
+            mimeType: file.mimeType,
+            data: file.data
+          }
+        });
       });
-    });
+    }
+
+    if (validIndex === validMessages.length - 1 && files && files.length > 0) {
+      files.forEach(file => {
+        parts.push({
+          inlineData: {
+            mimeType: file.mimeType,
+            data: file.data
+          }
+        });
+      });
+    }
+
+    return {
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts
+    };
+  });
+
+  const mergedContents = [];
+  for (const content of allContents) {
+    const last = mergedContents[mergedContents.length - 1];
+    if (last && last.role === content.role) {
+      last.parts.push({ text: '\n\n' });
+      last.parts.push(...content.parts);
+    } else {
+      mergedContents.push(content);
+    }
   }
 
   const config: any = {
     model,
-    contents: [
-      ...history,
-      { role: 'user', parts: currentParts }
-    ],
-    generationConfig: {
+    contents: mergedContents,
+    config: {
       temperature,
       topP,
       maxOutputTokens: maxTokens,
     }
   };
 
-  if (systemInstruction) {
-    config.systemInstruction = {
-      role: 'system',
-      parts: [{ text: systemInstruction }]
-    };
+  if (abortSignal) {
+    config.config = config.config || {};
+    config.config.abortSignal = abortSignal;
   }
 
   if (onChunk) {
@@ -87,20 +109,24 @@ export const sendMessageToGemini = async (
   }
 };
 
-export const generateChatTitle = async (apiKey: string, firstMessage: string): Promise<string> => {
+export const generateChatTitle = async (apiKey: string, userModel: string, firstMessage: string): Promise<string> => {
   const ai = new GoogleGenAI({ apiKey });
 
   const prompt = `Создай краткое и емкое название для чата (не более 3-4 слов) на основе этого первого сообщения пользователя: "${firstMessage}". Ответь ТОЛЬКО названием, без кавычек и точек.`;
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: [{ role: 'user', parts: [{ text: prompt }] }]
     });
     const title = response.text.trim();
     return title.replace(/^["']|["']$/g, '');
-  } catch (error) {
-    console.error('Failed to generate title:', error);
+  } catch (error: any) {
+    if (error?.message?.includes('429') || error?.message?.includes('Quota')) {
+      console.warn('Rate limit hit while generating chat title. Using fallback.');
+    } else {
+      console.error('Failed to generate title:', error);
+    }
     return firstMessage.length > 30 ? firstMessage.substring(0, 30) + '...' : firstMessage;
   }
 };
